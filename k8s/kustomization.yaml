@@ -13,9 +13,10 @@ resources:
   - 70-ingress.yaml
 
 images:
-  - name: ghcr.io/OWNER/odrl-translator-api
+  - name: ghcr.io/OWNER/tfm-traductor-bidireccional-odrl-api
     newName: odrl-translator-api
     newTag: local
-  - name: ghcr.io/OWNER/odrl-translator-ui
+
+  - name: ghcr.io/OWNER/tfm-traductor-bidireccional-odrl-ui
     newName: odrl-translator-ui
     newTag: local

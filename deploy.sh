@@ -91,8 +91,8 @@ if [[ "$MODE" == "local" ]]; then
   minikube image load "$API_IMG"
   minikube image load "$UI_IMG"
 else
-  API_IMG="ghcr.io/$GH_USER/odrl-translator-api:latest"
-  UI_IMG="ghcr.io/$GH_USER/odrl-translator-ui:latest"
+  API_IMG="ghcr.io/$GH_USER/tfm-traductor-bidireccional-odrl-api:latest"
+  UI_IMG="ghcr.io/$GH_USER/tfm-traductor-bidireccional-odrl-ui:latest" 
   info "Usando imágenes de GHCR: $API_IMG y $UI_IMG"
   info "  (recuerda que deben estar PÚBLICAS en la pestaña Packages)"
 fi
@@ -111,10 +111,10 @@ awk '/^images:/{exit} {print}' "$kfile" > "$kfile.tmp"
 cat >> "$kfile.tmp" <<EOF
 
 images:
-  - name: ghcr.io/OWNER/odrl-translator-api
+  - name: ghcr.io/OWNER/tfm-traductor-bidireccional-odrl-api
     newName: $api_new_name
     newTag: $api_new_tag
-  - name: ghcr.io/OWNER/odrl-translator-ui
+  - name: ghcr.io/OWNER/tfm-traductor-bidireccional-odrl-ui
     newName: $ui_new_name
     newTag: $ui_new_tag
 EOF
