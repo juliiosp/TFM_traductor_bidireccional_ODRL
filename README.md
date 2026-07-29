@@ -11,7 +11,7 @@
 
 Prototipo académico que utiliza modelos de lenguaje para reducir la barrera de entrada a ODRL, incorporando generación estructurada, normalización, validación SHACL, reparación automática, persistencia y evaluación reproducible.
 
----
+> **Para ejecutar la herramienta** consulta el [resumen de opciones de ejecución](#ejecución-y-despliegue) o la guía en `[DEPLOY.md](DEPLOY.md)`.
 
 ## Descripción
 
@@ -25,8 +25,6 @@ La solución se divide en dos componentes desacoplados:
 - una **interfaz Gradio**, que consume exclusivamente la API mediante HTTP.
 
 ---
-
-
 
 ## Arquitectura
 
@@ -112,18 +110,129 @@ Las políticas se normalizan en reglas atómicas: cada regla contiene un único 
 
 ---
 
-## Instalación y despliegue
+## Ejecución y despliegue
 
-Las instrucciones operativas se mantienen en un único documento para evitar duplicidades:
+> **Guía completa:** consulta `[DEPLOY.md](DEPLOY.md)` para los requisitos, la configuración de secretos, la persistencia, las actualizaciones, las copias de seguridad, el rollback y la resolución de problemas.
 
-- configuración de variables y secretos;
-- ejecución con Docker Compose;
-- despliegue en Minikube con imágenes locales o publicadas en GHCR;
-- aplicación manual de los manifiestos Kubernetes;
-- persistencia, copias de seguridad, actualización y rollback;
-- diagnóstico de errores y recomendaciones para producción.
+La aplicación admite tres formas principales de ejecución:
 
-Consulta la guía completa en `[DEPLOY.md](DEPLOY.md)`.
+
+| Modalidad                                     | Dónde se ejecuta                 | Origen de las imágenes                              | Comando principal                |
+| --------------------------------------------- | -------------------------------- | --------------------------------------------------- | -------------------------------- |
+| **Docker Compose local**                      | Docker en la máquina local       | Se construyen desde el código del repositorio       | `docker compose up --build`      |
+| **Kubernetes local**                          | Minikube en la máquina local     | Se construyen localmente y se cargan en Minikube    | `./deploy.sh --local`            |
+| **Kubernetes con imágenes de GitHub Actions** | Minikube o un clúster Kubernetes | Se descargan desde GitHub Container Registry (GHCR) | `GH_USER='juliiosp' ./deploy.sh` |
+
+
+GitHub Actions ejecuta las pruebas, construye las imágenes para `linux/amd64` y `linux/arm64` y las publica en GHCR con las etiquetas `latest` y `sha-<commit>`. El workflow **publica imágenes, pero no despliega automáticamente la aplicación**.
+
+### Opción 1: ejecución local con Docker Compose
+
+Requiere Docker Desktop o Docker Engine con Docker Compose.
+
+```bash
+cp .env.example .env
+```
+
+Configura al menos estas variables en `.env`:
+
+```dotenv
+OPENAI_API_KEY=tu_clave
+POSTGRES_PASSWORD=una_contraseña_segura
+```
+
+Construye e inicia PostgreSQL, FastAPI y Gradio:
+
+```bash
+docker compose up --build
+```
+
+Para ejecutarlo en segundo plano:
+
+```bash
+docker compose up --build -d
+```
+
+Acceso:
+
+- interfaz: `http://localhost:7860`;
+- API y Swagger: `http://localhost:8000/docs`.
+
+Detención:
+
+```bash
+docker compose down
+```
+
+La configuración completa de Docker Compose se explica en la [Parte I de](DEPLOY.md#parte-i-despliegue-con-docker-compose) `DEPLOY.md`.
+
+### Opción 2: Kubernetes local con imágenes construidas en el equipo
+
+Este modo construye `odrl-translator-api:local` y `odrl-translator-ui:local`, las carga en Minikube y despliega la aplicación mediante Kustomize.
+
+Requiere Docker, `kubectl` y Minikube:
+
+```bash
+export OPENAI_API_KEY='tu_clave'
+export POSTGRES_PASSWORD='una_contraseña_segura'
+
+./deploy.sh --local
+```
+
+Al finalizar, el script abre la interfaz mediante `port-forward` en:
+
+```text
+http://localhost:8080
+```
+
+Este modo no utiliza las imágenes de GHCR. Es el recomendado para probar cambios locales antes de subirlos al repositorio.
+
+La explicación completa está en la [opción de imágenes locales de](DEPLOY.md#14-opción-a-construir-las-imágenes-localmente) `DEPLOY.md`.
+
+### Opción 3: Kubernetes con imágenes publicadas por GitHub Actions
+
+Este modo no construye las imágenes en el equipo. Minikube descarga desde GHCR las imágenes publicadas por el workflow de GitHub Actions:
+
+```text
+ghcr.io/juliiosp/tfm-traductor-bidireccional-odrl-api:latest
+ghcr.io/juliiosp/tfm-traductor-bidireccional-odrl-ui:latest
+```
+
+Las imágenes deben ser públicas o el clúster debe disponer de credenciales para GHCR.
+
+```bash
+export OPENAI_API_KEY='tu_clave'
+export POSTGRES_PASSWORD='una_contraseña_segura'
+
+GH_USER='juliiosp' ./deploy.sh
+```
+
+Al finalizar, la interfaz queda disponible en:
+
+```text
+http://localhost:8080
+```
+
+Este modo permite validar exactamente los artefactos generados por CI/CD. La explicación completa está en la [opción GHCR de](DEPLOY.md#15-opción-b-utilizar-imágenes-publicadas-en-ghcr) `DEPLOY.md`.
+
+> El comando anterior utiliza **imágenes remotas** de GHCR, aunque el clúster sea Minikube local. Para desplegar las mismas imágenes en un clúster Kubernetes verdaderamente remoto, consulta la [aplicación manual de manifiestos](DEPLOY.md#parte-iii-aplicación-manual-de-los-manifiestos) y la sección sobre [registros privados](DEPLOY.md#26-registro-privado-de-contenedores).
+
+
+
+### Retirar el despliegue de Kubernetes
+
+```bash
+./teardown.sh
+```
+
+Este comando elimina el namespace `odrl`, incluidos los pods, servicios, secretos y el volumen de PostgreSQL, pero mantiene Minikube en ejecución. También están disponibles:
+
+```bash
+./teardown.sh --stop
+./teardown.sh --delete-cluster
+```
+
+Consulta todos los detalles en `[DEPLOY.md](DEPLOY.md)`.
 
 ---
 
