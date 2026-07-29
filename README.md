@@ -110,7 +110,7 @@ Las políticas se normalizan en reglas atómicas: cada regla contiene un único 
 
 ## Ejecución y despliegue
 
-> **Guía completa:** consulta `[DEPLOY.md]` para los requisitos, la configuración de secretos, la persistencia, las actualizaciones, las copias de seguridad, el rollback y la resolución de problemas.
+> **Guía completa:** consulta [DEPLOY.md](DEPLOY.md) `DEPLOY.md` para los requisitos, la configuración de secretos, la persistencia, las actualizaciones, las copias de seguridad, el rollback y la resolución de problemas.
 
 La aplicación admite tres formas principales de ejecución:
 
