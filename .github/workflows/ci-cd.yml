@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  API_IMAGE_NAME: odrl-translator-api
-  UI_IMAGE_NAME: odrl-translator-ui
+  API_IMAGE_NAME: tfm-traductor-bidireccional-odrl-api
+  UI_IMAGE_NAME: tfm-traductor-bidireccional-odrl-ui
 
 jobs:
   test:
