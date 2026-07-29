@@ -1,0 +1,58 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: odrl-translator
+  namespace: odrl
+  labels:
+    app.kubernetes.io/part-of: odrl-translator
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: odrl.local
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: odrl-api
+                port:
+                  number: 8000
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: odrl-api
+                port:
+                  number: 8000
+          - path: /openapi.json
+            pathType: Exact
+            backend:
+              service:
+                name: odrl-api
+                port:
+                  number: 8000
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: odrl-api
+                port:
+                  number: 8000
+          - path: /ready
+            pathType: Exact
+            backend:
+              service:
+                name: odrl-api
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: odrl-ui
+                port:
+                  number: 7860

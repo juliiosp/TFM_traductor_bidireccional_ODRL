@@ -1,0 +1,15 @@
+gradio
+openai
+langchain
+langchain-openai
+python-dotenv
+rdflib
+pyshacl
+fastapi
+sqlalchemy
+pydantic
+uvicorn
+psycopg2-binary
+pandas
+httpx
+pytest

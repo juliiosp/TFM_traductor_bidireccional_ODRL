@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odrl-ui
+  namespace: odrl
+  labels:
+    app.kubernetes.io/name: odrl-ui
+    app.kubernetes.io/part-of: odrl-translator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: odrl-ui
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: odrl-ui
+        app.kubernetes.io/part-of: odrl-translator
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ui
+          image: ghcr.io/OWNER/odrl-translator-ui:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 7860
+          envFrom:
+            - configMapRef:
+                name: odrl-ui-config
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 40
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "768Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /home/appuser/.cache
+            - name: gradio
+              mountPath: /home/appuser/.gradio
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+        - name: gradio
+          emptyDir: {}
