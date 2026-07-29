@@ -11,8 +11,6 @@
 
 Prototipo académico que utiliza modelos de lenguaje para reducir la barrera de entrada a ODRL, incorporando generación estructurada, normalización, validación SHACL, reparación automática, persistencia y evaluación reproducible.
 
-> **Para ejecutar la herramienta** consulta el [resumen de opciones de ejecución](#ejecución-y-despliegue) o la guía en `[DEPLOY.md](DEPLOY.md)`.
-
 ## Descripción
 
 ODRL Translator permite transformar una política expresada en lenguaje natural en una política ODRL JSON-LD estructurada y realizar el proceso inverso, generando una explicación comprensible a partir de una política formal.
