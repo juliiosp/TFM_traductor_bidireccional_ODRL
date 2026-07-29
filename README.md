@@ -2,13 +2,6 @@
 
 **Traducción bidireccional entre lenguaje natural y políticas ODRL serializadas en JSON-LD**
 
-[Python](https://www.python.org/)
-[FastAPI](https://fastapi.tiangolo.com/)
-[Gradio](https://www.gradio.app/)
-[Docker](https://www.docker.com/)
-[Kubernetes](https://kubernetes.io/)
-[ODRL](https://www.w3.org/TR/odrl-model/)
-
 Prototipo académico que utiliza modelos de lenguaje para reducir la barrera de entrada a ODRL, incorporando generación estructurada, normalización, validación SHACL, reparación automática, persistencia y evaluación reproducible.
 
 ## Descripción
