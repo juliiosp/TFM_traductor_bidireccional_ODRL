@@ -135,7 +135,7 @@ docker compose down -v
 
 # 2. Kubernetes local con Minikube
 
-El script `[deploy.sh](deploy.sh)` admite dos modos:
+El script `deploy.sh` admite dos modos:
 
 - `--local`: construye las imágenes en el equipo y las carga en Minikube.
 - modo predeterminado: descarga desde GHCR las imágenes publicadas por GitHub Actions.
