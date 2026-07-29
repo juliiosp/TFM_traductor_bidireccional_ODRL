@@ -2,7 +2,7 @@
 
 Esta guía explica cómo ejecutar **ODRL Translator** mediante Docker Compose, Kubernetes local con Minikube y un clúster Kubernetes externo utilizando las imágenes publicadas por GitHub Actions.
 
-Para la descripción funcional, arquitectura y uso de la aplicación, consulta `[README.md](README.md)`.
+Para la descripción funcional, arquitectura y uso de la aplicación, consulta [README.md](README.md).
 
 ## Modalidades disponibles
 
