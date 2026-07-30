@@ -70,12 +70,31 @@ fi
 [[ -d "$K8S_DIR" ]] || die "No encuentro la carpeta '$K8S_DIR/'. Ejecuta el script desde la raíz del proyecto."
 
 # --- Clúster ---------------------------------------------------------------
-if minikube status >/dev/null 2>&1; then
-  ok "minikube ya está en marcha."
+# Un clúster sano = kubectl llega al apiserver Y existe una StorageClass por
+# defecto (sin ella, el disco de Postgres se queda en Pending).
+cluster_healthy() {
+  kubectl get nodes >/dev/null 2>&1 \
+    && [[ -n "$(kubectl get storageclass -o name 2>/dev/null)" ]]
+}
+
+if minikube status >/dev/null 2>&1 && cluster_healthy; then
+  ok "minikube ya está en marcha y sano."
 else
   info "Arrancando minikube..."
-  minikube start --driver=docker
+  minikube start --driver=docker || true   # tolerante: si arranca roto, lo recreamos abajo
 fi
+
+# Si Docker reinició y recreó el contenedor sobre un perfil viejo, el clúster
+# puede quedar a medias (apiserver caído, sin StorageClass). En ese caso, en
+# vez de desplegar sobre un clúster roto, lo recreamos limpio una sola vez.
+if ! cluster_healthy; then
+  info "El clúster arrancó en mal estado; recreándolo limpio (minikube delete)..."
+  minikube delete || true
+  minikube start --driver=docker
+  cluster_healthy || die "No consigo un clúster sano. Abre Docker Desktop del todo (icono estable) y reintenta."
+fi
+ok "Clúster sano: apiserver accesible y StorageClass por defecto presente."
+
 info "Activando addons (ingress, metrics-server)..."
 minikube addons enable ingress >/dev/null 2>&1 || true
 minikube addons enable metrics-server >/dev/null 2>&1 || true
@@ -135,22 +154,47 @@ kubectl -n "$NAMESPACE" create secret generic odrl-postgres-secret \
   --from-literal=POSTGRES_DB=odrl \
   --dry-run=client -o yaml | kubectl apply -f -
 
+# --- Esperar al controlador de Ingress -------------------------------------
+# minikube tarda en levantar el controlador nginx. Si se aplica el Ingress
+# antes de que su webhook de admisión responda, kubectl falla con
+# "connect: connection refused". Esperamos a que el controlador esté Ready.
+info "Esperando a que el controlador de Ingress esté listo..."
+for _ in $(seq 1 60); do
+  kubectl -n ingress-nginx get deploy ingress-nginx-controller >/dev/null 2>&1 && break
+  sleep 2
+done
+kubectl -n ingress-nginx rollout status deployment/ingress-nginx-controller --timeout=180s || true
+kubectl -n ingress-nginx wait --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller --timeout=180s || true
+
 # --- Desplegar -------------------------------------------------------------
+# El apply es idempotente: si el webhook del Ingress aún no responde en el
+# primer intento, se reintenta (el resto de recursos saldrá como "unchanged").
+apply_manifests() {
+  if [[ "$MODE" == "local" ]]; then
+    # Con imágenes locales hay que evitar que k8s intente descargarlas.
+    kubectl kustomize "$RENDER_DIR" \
+      | sed 's/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/' \
+      | kubectl apply -f -
+  else
+    kubectl apply -k "$RENDER_DIR"
+  fi
+}
+
 info "Aplicando manifiestos..."
-if [[ "$MODE" == "local" ]]; then
-  # Con imágenes locales hay que evitar que k8s intente descargarlas.
-  kubectl kustomize "$RENDER_DIR" \
-    | sed 's/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/' \
-    | kubectl apply -f -
-else
-  kubectl apply -k "$RENDER_DIR"
-fi
+attempt=0
+until apply_manifests; do
+  attempt=$((attempt + 1))
+  [[ $attempt -ge 10 ]] && die "No se pudieron aplicar los manifiestos tras varios intentos."
+  info "El webhook del Ingress aún no responde; reintentando ($attempt/10)..."
+  sleep 10
+done
 
 # --- Esperar a que esté listo ----------------------------------------------
 info "Esperando a que los pods estén listos (puede tardar mientras descarga imágenes)..."
-kubectl -n "$NAMESPACE" rollout status statefulset/odrl-postgres --timeout=180s
-kubectl -n "$NAMESPACE" rollout status deployment/odrl-api --timeout=180s
-kubectl -n "$NAMESPACE" rollout status deployment/odrl-ui --timeout=180s
+kubectl -n "$NAMESPACE" rollout status statefulset/odrl-postgres --timeout=300s || true
+kubectl -n "$NAMESPACE" rollout status deployment/odrl-api --timeout=300s
+kubectl -n "$NAMESPACE" rollout status deployment/odrl-ui --timeout=300s
 
 ok "Despliegue completado."
 echo
