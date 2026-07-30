@@ -148,7 +148,7 @@ fi
 
 # --- Esperar a que esté listo ----------------------------------------------
 info "Esperando a que los pods estén listos (puede tardar mientras descarga imágenes)..."
-kubectl -n "$NAMESPACE" rollout status statefulset/odrl-postgres --timeout=180s || true
+kubectl -n "$NAMESPACE" rollout status statefulset/odrl-postgres --timeout=180s
 kubectl -n "$NAMESPACE" rollout status deployment/odrl-api --timeout=180s
 kubectl -n "$NAMESPACE" rollout status deployment/odrl-ui --timeout=180s
 
