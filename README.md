@@ -155,7 +155,7 @@ Detención:
 docker compose down
 ```
 
-La configuración completa de Docker Compose se explica en la [Parte I de](DEPLOY.md#parte-i-despliegue-con-docker-compose) `DEPLOY.md`.
+La configuración completa de Docker Compose se explica en la [sección de Docker Compose de DEPLOY.md](DEPLOY.md#1-ejecución-local-con-docker-compose).
 
 ### Opción 2: Kubernetes local con imágenes construidas en el equipo
 
@@ -178,7 +178,7 @@ http://localhost:8080
 
 Este modo no utiliza las imágenes de GHCR. Es el recomendado para probar cambios locales antes de subirlos al repositorio.
 
-La explicación completa está en la [opción de imágenes locales de](DEPLOY.md#14-opción-a-construir-las-imágenes-localmente) `DEPLOY.md`.
+La explicación completa está en la [opción de imágenes locales de DEPLOY.md](DEPLOY.md#21-imágenes-construidas-localmente).
 
 ### Opción 3: Kubernetes con imágenes publicadas por GitHub Actions
 
@@ -204,9 +204,9 @@ Al finalizar, la interfaz queda disponible en:
 http://localhost:8080
 ```
 
-Este modo permite validar exactamente los artefactos generados por CI/CD. La explicación completa está en la [opción GHCR de](DEPLOY.md#15-opción-b-utilizar-imágenes-publicadas-en-ghcr) `DEPLOY.md`.
+Este modo permite validar exactamente los artefactos generados por CI/CD. La explicación completa está en la [opción de imágenes de GHCR de DEPLOY.md](DEPLOY.md#22-imágenes-publicadas-por-github-actions).
 
-> El comando anterior utiliza **imágenes remotas** de GHCR, aunque el clúster sea Minikube local. Para desplegar las mismas imágenes en un clúster Kubernetes verdaderamente remoto, consulta la [aplicación manual de manifiestos](DEPLOY.md#parte-iii-aplicación-manual-de-los-manifiestos) y la sección sobre [registros privados](DEPLOY.md#26-registro-privado-de-contenedores).
+> El comando anterior utiliza **imágenes remotas** de GHCR, aunque el clúster sea Minikube local. Para desplegar las mismas imágenes en un clúster Kubernetes verdaderamente remoto, consulta la [aplicación manual de manifiestos en un clúster externo](DEPLOY.md#3-kubernetes-externo-con-imágenes-de-github-actions) y la sección sobre [registros privados de contenedores](DEPLOY.md#ghcr-privado).
 
 
 
@@ -223,13 +223,13 @@ Este comando elimina el namespace `odrl`, incluidos los pods, servicios, secreto
 ./teardown.sh --delete-cluster
 ```
 
-Consulta todos los detalles en `[DEPLOY.md](DEPLOY.md)`.
+Consulta todos los detalles en [DEPLOY.md](DEPLOY.md).
 
 ---
 
 ## Desarrollo local sin contenedores
 
-Esta modalidad está orientada al desarrollo y la ejecución directa del código Python. Para los despliegues con contenedores o Kubernetes, consulta `[DEPLOY.md](DEPLOY.md)`.
+Esta modalidad está orientada al desarrollo y la ejecución directa del código Python. Para los despliegues con contenedores o Kubernetes, consulta [DEPLOY.md](DEPLOY.md).
 
 ### Requisitos
 
@@ -518,7 +518,7 @@ En ejecución local se puede utilizar SQLite. Docker Compose y Kubernetes utiliz
 
 Este repositorio es un **prototipo académico**. La validación confirma la conformidad con el perfil SHACL definido por el proyecto, pero no cubre todo el modelo ODRL ni constituye una validación jurídica.
 
-La aplicación no debe exponerse públicamente sin autenticación, control de acceso, límites de consumo, TLS, protección de secretos y una política de privacidad y retención del historial. Las medidas operativas y la lista de comprobación para producción se describen exclusivamente en `[DEPLOY.md](DEPLOY.md)`.
+La aplicación no debe exponerse públicamente sin autenticación, control de acceso, límites de consumo, TLS, protección de secretos y una política de privacidad y retención del historial. Las medidas operativas y la lista de comprobación para producción se describen exclusivamente en [DEPLOY.md](DEPLOY.md).
 
 No incluyas `.env`, claves, contraseñas ni manifiestos con secretos reales en Git o en paquetes de entrega.
 
