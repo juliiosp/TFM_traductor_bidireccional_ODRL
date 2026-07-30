@@ -213,14 +213,14 @@ Este modo permite validar exactamente los artefactos generados por CI/CD. La exp
 ### Retirar el despliegue de Kubernetes
 
 ```bash
-./teardown.sh
+./destroy.sh
 ```
 
 Este comando elimina el namespace `odrl`, incluidos los pods, servicios, secretos y el volumen de PostgreSQL, pero mantiene Minikube en ejecución. También están disponibles:
 
 ```bash
-./teardown.sh --stop
-./teardown.sh --delete-cluster
+./destroy.sh --stop
+./destroy.sh --delete-cluster
 ```
 
 Consulta todos los detalles en [DEPLOY.md](DEPLOY.md).
@@ -486,7 +486,7 @@ Las pruebas unitarias no necesitan una clave de OpenAI porque no ejecutan los pi
 ├── Dockerfile.ui                # Imagen de la interfaz
 ├── docker-compose.yml           # Entorno local completo
 ├── deploy.sh                    # Automatización de Minikube
-├── teardown.sh                  # Retirada del entorno Kubernetes
+├── destroy.sh                  # Retirada del entorno Kubernetes
 ├── DEPLOY.md                    # Guía única de despliegue y operación
 └── requirements.txt             # Dependencias Python
 ```

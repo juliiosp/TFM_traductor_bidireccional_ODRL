@@ -151,7 +151,7 @@ En macOS:
 
 ```bash
 brew install kubectl minikube
-chmod +x deploy.sh teardown.sh
+chmod +x deploy.sh destroy.sh
 ```
 
 Exporta los secretos en la terminal:
@@ -256,19 +256,19 @@ kubectl logs -n odrl statefulset/odrl-postgres --tail=200
 Eliminar el namespace `odrl`, incluidos la base de datos y su volumen, manteniendo Minikube:
 
 ```bash
-./teardown.sh
+./destroy.sh
 ```
 
 Eliminar el despliegue y detener Minikube:
 
 ```bash
-./teardown.sh --stop
+./destroy.sh --stop
 ```
 
 Eliminar completamente el clúster:
 
 ```bash
-./teardown.sh --delete-cluster
+./destroy.sh --delete-cluster
 ```
 
 ---
