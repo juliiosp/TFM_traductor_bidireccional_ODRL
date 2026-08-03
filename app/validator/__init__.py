@@ -1,5 +1,3 @@
-import json
-
 from app.schemas import ValidationIssue, ValidationResult
 from app.validator.json_validator import validate_jsonld_document
 from app.validator.shacl_validator import SHACLExecutionError, validate_with_shacl
@@ -53,20 +51,3 @@ def validate_policy(policy: dict) -> ValidationResult:
         ],
         raw_report=report,
     )
-
-
-def validate_odrl_text(policy_text: str) -> str:
-    """Validate ODRL JSON-LD entered in the interface."""
-
-    if not policy_text.strip():
-        return "Please enter an ODRL JSON-LD policy."
-
-    try:
-        policy = json.loads(policy_text)
-        return validate_policy(policy).to_display_text()
-
-    except json.JSONDecodeError as error:
-        return f"❌ The input is not valid JSON: {error.msg}."
-
-    except Exception as error:
-        return f"❌ Validation error: {error}"

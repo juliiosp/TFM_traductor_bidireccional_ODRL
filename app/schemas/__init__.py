@@ -1,5 +1,7 @@
 from typing import Any, Literal
+
 from pydantic import BaseModel, Field
+
 
 class ValidationIssue(BaseModel):
     stage: Literal["json", "shacl"]
@@ -11,13 +13,12 @@ class ValidationIssue(BaseModel):
     source_constraint: str | None = None
     source_shape: str | None = None
 
+
 class ValidationResult(BaseModel):
     valid: bool
     stage: Literal["json", "shacl", "complete"]
     message: str
-    issues: list[ValidationIssue] = Field(
-        default_factory=list
-    )
+    issues: list[ValidationIssue] = Field(default_factory=list)
     raw_report: str | None = None
 
     def to_display_text(self) -> str:
@@ -38,47 +39,18 @@ class ValidationResult(BaseModel):
             )
 
         if self.raw_report and not self.issues:
-            text += (
-                f"\n\nRaw report:\n"
-                f"{self.raw_report}"
-            )
+            text += f"\n\nRaw report:\n{self.raw_report}"
 
         return text
 
-class RepairInput(BaseModel):
-    original_text: str
-    invalid_policy: dict[str, Any]
-    validation_errors: list[str]
-
-class RepairResult(BaseModel):
-    repaired_policy: dict[str, Any]
-    changes: list[str] = Field(
-        default_factory=list
-    )
-    llm_used: bool = False
 
 class AIEvaluationScores(BaseModel):
-    structural_validity: int = Field(
-        default=1,
-        ge=1,
-        le=5,
-    )
-    semantic_fidelity: int = Field(
-        default=1,
-        ge=1,
-        le=5,
-    )
-    completeness: int = Field(
-        default=1,
-        ge=1,
-        le=5,
-    )
-    clarity: int = Field(
-        default=1,
-        ge=1,
-        le=5,
-    )
+    structural_validity: int = Field(default=1, ge=1, le=5)
+    semantic_fidelity: int = Field(default=1, ge=1, le=5)
+    completeness: int = Field(default=1, ge=1, le=5)
+    clarity: int = Field(default=1, ge=1, le=5)
     observations: str = ""
+
 
 class EvaluationCaseResult(BaseModel):
     id: str
@@ -86,24 +58,16 @@ class EvaluationCaseResult(BaseModel):
     expected_rule_type: str
     expected_constraint: str
     expected_policy_type: str = ""
-    expected_actions: list[str] = Field(
-        default_factory=list
-    )
-    covered_elements: list[str] = Field(
-        default_factory=list
-    )
+    expected_actions: list[str] = Field(default_factory=list)
+    covered_elements: list[str] = Field(default_factory=list)
     notes: str = ""
 
     generated_policy_type: str = ""
     generated_rule_type: str = ""
-    generated_actions: list[str] = Field(
-        default_factory=list
-    )
+    generated_actions: list[str] = Field(default_factory=list)
     generated_constraint_summary: str = ""
     expected_elements_match: bool = False
-    expected_mismatches: list[str] = Field(
-        default_factory=list
-    )
+    expected_mismatches: list[str] = Field(default_factory=list)
 
     json_valid: bool = False
     initial_basic_valid: bool = False
@@ -114,12 +78,8 @@ class EvaluationCaseResult(BaseModel):
 
     repair_attempted: bool = False
     repair_applied: bool = False
-    repair_changes: list[str] = Field(
-        default_factory=list
-    )
-    repair_errors_before: list[str] = Field(
-        default_factory=list
-    )
+    repair_changes: list[str] = Field(default_factory=list)
+    repair_errors_before: list[str] = Field(default_factory=list)
 
     raw_model_response: str = ""
     cleaned_model_response: str = ""
@@ -127,14 +87,10 @@ class EvaluationCaseResult(BaseModel):
     raw_odrl_policy: dict[str, Any] | None = None
     raw_odrl_policy_text: str = ""
 
-    normalized_odrl_policy: (
-        dict[str, Any] | None
-    ) = None
+    normalized_odrl_policy: dict[str, Any] | None = None
     normalized_odrl_policy_text: str = ""
 
-    repaired_odrl_policy: (
-        dict[str, Any] | None
-    ) = None
+    repaired_odrl_policy: dict[str, Any] | None = None
     repaired_odrl_policy_text: str = ""
 
     final_policy_stage: str = ""
@@ -148,6 +104,7 @@ class EvaluationCaseResult(BaseModel):
     ai_scores: AIEvaluationScores | None = None
     ai_error: str | None = None
     error: str | None = None
+
 
 class EvaluationRunResult(BaseModel):
     total_cases: int

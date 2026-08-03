@@ -44,24 +44,17 @@ def normalize_policy(policy: dict) -> dict:
 
 
 def ensure_policy_uid(policy: dict) -> dict:
-    policy.setdefault(
-        "uid",
-        f"http://example.com/policy/{uuid4()}",
-    )
+    policy.setdefault("uid", f"http://example.com/policy/{uuid4()}")
     return policy
 
 
 def _contains(policy: dict, key: str) -> bool:
-    return bool(
-        policy.get(key)
-        or any(
-            isinstance(rule, dict)
-            and rule.get(key)
-            for rule_key in RULE_KEYS
-            for rule in ensure_list(
-                policy.get(rule_key)
-            )
-        )
+    if policy.get(key):
+        return True
+    return any(
+        isinstance(rule, dict) and rule.get(key)
+        for rule_key in RULE_KEYS
+        for rule in ensure_list(policy.get(rule_key))
     )
 
 
@@ -69,39 +62,26 @@ def infer_policy_type(policy: dict) -> dict:
     if policy.get("@type"):
         return policy
 
-    has_assigner = _contains(
-        policy,
-        "assigner",
-    )
-    has_assignee = _contains(
-        policy,
-        "assignee",
-    )
+    has_assigner = _contains(policy, "assigner")
+    has_assignee = _contains(policy, "assignee")
 
-    policy["@type"] = (
-        "Agreement"
-        if has_assigner and has_assignee
-        else "Offer"
-        if has_assigner
-        else "Set"
-    )
+    if has_assigner and has_assignee:
+        policy["@type"] = "Agreement"
+    elif has_assigner:
+        policy["@type"] = "Offer"
+    else:
+        policy["@type"] = "Set"
 
     return policy
 
 
-def expand_compact_policy(
-    policy: dict,
-) -> dict:
-    shared = {
-        key: policy[key]
-        for key in ATOMIC_FIELDS
-        if key in policy
-    }
+def expand_compact_policy(policy: dict) -> dict:
+    """Move policy-level target/assigner/assignee/action into each rule."""
+
+    shared = {key: policy[key] for key in ATOMIC_FIELDS if key in policy}
 
     for rule_key in RULE_KEYS:
-        for rule in ensure_list(
-            policy.get(rule_key)
-        ):
+        for rule in ensure_list(policy.get(rule_key)):
             if isinstance(rule, dict):
                 for key, value in shared.items():
                     rule.setdefault(key, value)
@@ -112,102 +92,71 @@ def expand_compact_policy(
     return policy
 
 
-def atomicize_rule(
-    rule: dict,
-) -> list[dict]:
-    values = [
-        ensure_list(rule[field])
-        if field in rule
-        else [None]
-        for field in ATOMIC_FIELDS
-    ]
+def atomicize_rule(rule: dict) -> list[dict]:
+    """Expand a rule with list-valued fields into one rule per combination."""
+
+    values = [ensure_list(rule[field]) if field in rule else [None] for field in ATOMIC_FIELDS]
 
     atomic_rules = []
-
     for combination in product(*values):
         atomic_rule = deepcopy(rule)
-
-        for field, value in zip(
-            ATOMIC_FIELDS,
-            combination,
-            strict=True,
-        ):
+        for field, value in zip(ATOMIC_FIELDS, combination, strict=True):
             if value is None:
                 atomic_rule.pop(field, None)
             else:
                 atomic_rule[field] = value
-
-        atomic_rules.append(
-            atomic_rule
-        )
+        atomic_rules.append(atomic_rule)
 
     return atomic_rules
 
 
-def atomicize_policy_rules(
-    policy: dict,
-) -> dict:
+def atomicize_policy_rules(policy: dict) -> dict:
     for rule_key in RULE_KEYS:
         rules = policy.get(rule_key)
-
         if isinstance(rules, list):
             policy[rule_key] = [
                 atomic_rule
                 for rule in rules
                 if isinstance(rule, dict)
-                for atomic_rule in atomicize_rule(
-                    rule
-                )
+                for atomic_rule in atomicize_rule(rule)
             ]
 
     return policy
 
 
-def repair_policy_deterministically(
-    policy: dict,
-) -> tuple[dict, list[str]]:
+def repair_policy_deterministically(policy: dict) -> tuple[dict, list[str]]:
     changes = []
     missing_uid = not policy.get("uid")
-    compact_fields = [
-        key
-        for key in ATOMIC_FIELDS
-        if key in policy
-    ]
+    missing_type = not policy.get("@type")
+    compact_fields = [key for key in ATOMIC_FIELDS if key in policy]
 
     normalize_policy(policy)
 
     if missing_uid:
         ensure_policy_uid(policy)
-        changes.append(
-            "Added missing policy uid."
-        )
+        changes.append("Added missing policy uid.")
 
-    if not policy.get("@type"):
+    if missing_type:
         infer_policy_type(policy)
-        changes.append(
-            "Inferred missing policy @type."
-        )
+        changes.append("Inferred missing policy @type.")
 
     if compact_fields:
         expand_compact_policy(policy)
         changes.append(
-            "Expanded compact policy-level "
-            "properties into each rule: "
-            + ", ".join(compact_fields)
+            "Expanded compact policy-level properties into each rule: " + ", ".join(compact_fields)
         )
 
     atomicize_policy_rules(policy)
     normalize_policy(policy)
-    
+
     changes.extend(coerce_typed_right_operands(policy))
 
     return policy, changes
 
 
-def normalize_odrl_policy(
-    policy: dict,
-) -> dict:
+def normalize_odrl_policy(policy: dict) -> dict:
     return normalize_policy(policy)
+
 
 _DATATYPE_SIBLINGS = ("datatype", "dataType")
 

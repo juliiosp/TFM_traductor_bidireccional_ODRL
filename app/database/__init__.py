@@ -32,11 +32,7 @@ engine = create_engine(
     pool_pre_ping=True,
 )
 
-SessionLocal = sessionmaker(
-    bind=engine,
-    autoflush=False,
-    autocommit=False,
-)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 Base = declarative_base()
 
@@ -61,80 +57,43 @@ class Translation(Base):
     repair_changes = Column(Text)
     original_policy_before_repair = Column(Text)
 
-    repair_attempts = Column(
-        Integer,
-        default=0,
-        nullable=False,
-    )
-
+    repair_attempts = Column(Integer, default=0, nullable=False)
     repair_stopped_reason = Column(Text)
 
-    llm_calls = Column(
-        Integer,
-        default=0,
-        nullable=False,
-    )
-
-    duration_seconds = Column(
-        Float,
-        default=0.0,
-        nullable=False,
-    )
+    llm_calls = Column(Integer, default=0, nullable=False)
+    duration_seconds = Column(Float, default=0.0, nullable=False)
 
     validation_report = Column(Text)
 
-    created_at = Column(
-        DateTime,
-        default=datetime.utcnow,
-    )
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 def _add_missing_columns() -> None:
     """Adds monitoring columns to an existing SQLite database."""
 
     inspector = inspect(engine)
-
     if "translations" not in inspector.get_table_names():
         return
 
-    existing = {
-        column["name"]
-        for column in inspector.get_columns(
-            "translations"
-        )
-    }
+    existing = {column["name"] for column in inspector.get_columns("translations")}
 
     columns = {
-        "repair_attempts": (
-            "INTEGER NOT NULL DEFAULT 0"
-        ),
+        "repair_attempts": "INTEGER NOT NULL DEFAULT 0",
         "repair_stopped_reason": "TEXT",
-        "llm_calls": (
-            "INTEGER NOT NULL DEFAULT 0"
-        ),
-        "duration_seconds": (
-            "REAL NOT NULL DEFAULT 0.0"
-        ),
+        "llm_calls": "INTEGER NOT NULL DEFAULT 0",
+        "duration_seconds": "REAL NOT NULL DEFAULT 0.0",
     }
 
     with engine.begin() as connection:
         for name, definition in columns.items():
             if name not in existing:
-                connection.execute(
-                    text(
-                        "ALTER TABLE translations "
-                        f"ADD COLUMN {name} {definition}"
-                    )
-                )
+                connection.execute(text(f"ALTER TABLE translations ADD COLUMN {name} {definition}"))
 
 
 def init_db() -> None:
     """Creates the database and updates existing local tables."""
 
-    Base.metadata.create_all(
-        bind=engine
-    )
-
+    Base.metadata.create_all(bind=engine)
     _add_missing_columns()
 
 
@@ -158,7 +117,6 @@ def save_translation(
     """Stores one translation."""
 
     db = SessionLocal()
-
     try:
         item = Translation(
             direction=direction,
@@ -170,60 +128,38 @@ def save_translation(
             repair_enabled=repair_enabled,
             repair_applied=repair_applied,
             repair_changes=repair_changes,
-            original_policy_before_repair=(
-                original_policy_before_repair
-            ),
+            original_policy_before_repair=original_policy_before_repair,
             repair_attempts=repair_attempts,
-            repair_stopped_reason=(
-                repair_stopped_reason
-            ),
+            repair_stopped_reason=repair_stopped_reason,
             llm_calls=llm_calls,
             duration_seconds=duration_seconds,
             validation_report=validation_report,
         )
-
         db.add(item)
         db.commit()
         db.refresh(item)
-
         return item
-
     finally:
         db.close()
 
-def get_recent_translations(
-    limit: int = 10,
-) -> list[Translation]:
+
+def get_recent_translations(limit: int = 10) -> list[Translation]:
     """Returns the most recent translations."""
 
     db = SessionLocal()
-
     try:
-        return (
-            db.query(Translation)
-            .order_by(
-                Translation.created_at.desc()
-            )
-            .limit(limit)
-            .all()
-        )
-
+        return db.query(Translation).order_by(Translation.created_at.desc()).limit(limit).all()
     finally:
         db.close()
+
 
 def delete_all_translations() -> int:
     """Deletes the complete translation history."""
 
     db = SessionLocal()
-
     try:
-        deleted = db.query(
-            Translation
-        ).delete()
-
+        deleted = db.query(Translation).delete()
         db.commit()
-
         return deleted
-
     finally:
         db.close()
