@@ -44,6 +44,18 @@ class ValidationResult(BaseModel):
         return text
 
 
+class RepairInput(BaseModel):
+    original_text: str
+    invalid_policy: dict[str, Any]
+    validation_errors: list[str]
+
+
+class RepairResult(BaseModel):
+    repaired_policy: dict[str, Any]
+    changes: list[str] = Field(default_factory=list)
+    llm_used: bool = False
+
+
 class AIEvaluationScores(BaseModel):
     structural_validity: int = Field(default=1, ge=1, le=5)
     semantic_fidelity: int = Field(default=1, ge=1, le=5)
