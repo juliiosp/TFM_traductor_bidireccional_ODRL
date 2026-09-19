@@ -43,11 +43,6 @@ flowchart LR
     EV --> DET[Comparación determinista]
     EV --> AIE[Evaluador LLM opcional]
 ```
-
-
-
-
-
 ### Principios de diseño
 
 1. **Separación de responsabilidades.** La interfaz no accede directamente al modelo, los validadores ni la base de datos.
@@ -103,7 +98,7 @@ Las políticas se normalizan en reglas atómicas: cada regla contiene un único 
 
 ## Ejecución y despliegue
 
-> **Guía completa:** consulta [DEPLOY.md](DEPLOY.md) para los requisitos, la configuración de secretos, la persistencia, las actualizaciones, las copias de seguridad, el rollback y la resolución de problemas.
+> **Guía completa:** consulta [DEPLOY.md](DEPLOY.md) para los requisitos, la configuración de secretos, la verificación del despliegue, el diagnóstico de problemas y el alcance operativo.
 
 La aplicación admite tres formas principales de ejecución:
 
@@ -207,9 +202,7 @@ http://localhost:8080
 Este modo permite validar exactamente los artefactos generados por CI/CD. La explicación completa está en la [opción de imágenes de GHCR de DEPLOY.md](DEPLOY.md#22-imágenes-publicadas-por-github-actions).
 
 > El comando anterior utiliza **imágenes remotas** de GHCR, aunque el clúster sea Minikube local.
-> El despliegue se ha validado únicamente sobre un clúster local con Minikube; la ejecución en un clúster de producción o de un proveedor colad queda fuera del alcance de este prototipo.
-
-
+> El despliegue se ha validado únicamente sobre un clúster local con Minikube; la ejecución en un clúster de producción o de un proveedor cloud queda fuera del alcance de este prototipo.
 
 ### Retirar el despliegue de Kubernetes
 
@@ -487,7 +480,7 @@ Las pruebas unitarias no necesitan una clave de OpenAI porque no ejecutan los pi
 ├── Dockerfile.ui                # Imagen de la interfaz
 ├── docker-compose.yml           # Entorno local completo
 ├── deploy.sh                    # Automatización de Minikube
-├── destroy.sh                  # Retirada del entorno Kubernetes
+├── destroy.sh                   # Retirada del entorno Kubernetes
 ├── DEPLOY.md                    # Guía única de despliegue y operación
 └── requirements.txt             # Dependencias Python
 ```
