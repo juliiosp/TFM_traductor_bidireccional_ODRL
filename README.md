@@ -112,7 +112,7 @@ La aplicación admite tres formas principales de ejecución:
 | --------------------------------------------- | -------------------------------- | --------------------------------------------------- | -------------------------------- |
 | **Docker Compose local**                      | Docker en la máquina local       | Se construyen desde el código del repositorio       | `docker compose up --build`      |
 | **Kubernetes local**                          | Minikube en la máquina local     | Se construyen localmente y se cargan en Minikube    | `./deploy.sh --local`            |
-| **Kubernetes con imágenes de GitHub Actions** | Minikube o un clúster Kubernetes | Se descargan desde GitHub Container Registry (GHCR) | `GH_USER='juliiosp' ./deploy.sh` |
+| **Kubernetes con imágenes de GitHub Actions** | Minikube en la máquina local | Se descargan desde GitHub Container Registry (GHCR) | `GH_USER='juliiosp' ./deploy.sh` |
 
 
 GitHub Actions ejecuta las pruebas, construye las imágenes para `linux/amd64` y `linux/arm64` y las publica en GHCR con las etiquetas `latest` y `sha-<commit>`. El workflow **publica imágenes, pero no despliega automáticamente la aplicación**.
@@ -206,7 +206,8 @@ http://localhost:8080
 
 Este modo permite validar exactamente los artefactos generados por CI/CD. La explicación completa está en la [opción de imágenes de GHCR de DEPLOY.md](DEPLOY.md#22-imágenes-publicadas-por-github-actions).
 
-> El comando anterior utiliza **imágenes remotas** de GHCR, aunque el clúster sea Minikube local. Para desplegar las mismas imágenes en un clúster Kubernetes verdaderamente remoto, consulta la [aplicación manual de manifiestos en un clúster externo](DEPLOY.md#3-kubernetes-externo-con-imágenes-de-github-actions) y la sección sobre [registros privados de contenedores](DEPLOY.md#ghcr-privado).
+> El comando anterior utiliza **imágenes remotas** de GHCR, aunque el clúster sea Minikube local.
+> El despliegue se ha validado únicamente sobre un clúster local con Minikube; la ejecución en un clúster de producción o de un proveedor colad queda fuera del alcance de este prototipo.
 
 
 
