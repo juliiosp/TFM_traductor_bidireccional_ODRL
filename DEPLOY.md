@@ -1,6 +1,6 @@
 # Despliegue de ODRL Translator
 
-Esta guía explica cómo ejecutar **ODRL Translator** mediante Docker Compose, Kubernetes local con Minikube y un clúster Kubernetes externo utilizando las imágenes publicadas por GitHub Actions.
+Esta guía explica cómo ejecutar **ODRL Translator** mediante Docker Compose y Kubernetes local con Minikube, utilizando imágenes construidas en el equipo o publicadas por GitHub Actions en GHCR.
 
 Para la descripción funcional, arquitectura y uso de la aplicación, consulta [README.md](README.md).
 
@@ -12,8 +12,6 @@ Para la descripción funcional, arquitectura y uso de la aplicación, consulta [
 | Docker Compose            | Máquina local  | Construidas desde el repositorio | `docker compose up --build`             |
 | Kubernetes local          | Minikube       | Construidas localmente           | `./deploy.sh --local`                   |
 | Kubernetes local con GHCR | Minikube       | Publicadas por GitHub Actions    | `GH_USER='juliiosp' ./deploy.sh`        |
-| Kubernetes externo        | Clúster remoto | Publicadas por GitHub Actions    | Aplicación de manifiestos con `kubectl` |
-
 
 ## Configuración común
 
@@ -270,118 +268,10 @@ Eliminar completamente el clúster:
 ```bash
 ./destroy.sh --delete-cluster
 ```
-
 ---
 
-# 3. Kubernetes externo con imágenes de GitHub Actions
 
-`deploy.sh` está diseñado para Minikube. Para un clúster Kubernetes externo se utilizan los mismos manifiestos y las imágenes publicadas en GHCR, pero la aplicación se realiza con `kubectl`.
-
-## Requisitos
-
-- Acceso configurado al clúster mediante `kubectl`.
-- Una `StorageClass` predeterminada para el PVC de PostgreSQL.
-- Un controlador Ingress compatible con `ingressClassName: nginx`, o la adaptación de `k8s/70-ingress.yaml`.
-- Imágenes GHCR públicas o credenciales para descargarlas.
-
-Comprueba el contexto antes de aplicar recursos:
-
-```bash
-kubectl config current-context
-kubectl get nodes
-kubectl get storageclass
-```
-
-## Crear los secretos
-
-```bash
-export OPENAI_API_KEY='tu_clave'
-export POSTGRES_PASSWORD='una_contraseña_segura'
-
-kubectl apply -f k8s/00-namespace.yaml
-
-kubectl -n odrl create secret generic odrl-api-secrets \
-  --from-literal=OPENAI_API_KEY="$OPENAI_API_KEY" \
-  --from-literal=DATABASE_URL="postgresql+psycopg2://odrl:${POSTGRES_PASSWORD}@odrl-postgres:5432/odrl" \
-  --dry-run=client -o yaml | kubectl apply -f -
-
-kubectl -n odrl create secret generic odrl-postgres-secret \
-  --from-literal=POSTGRES_USER=odrl \
-  --from-literal=POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
-  --from-literal=POSTGRES_DB=odrl \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
-
-## Renderizar con las imágenes de GHCR
-
-Define el propietario y la etiqueta. Para despliegues reproducibles se recomienda `sha-<commit>` en lugar de `latest`:
-
-```bash
-export GH_USER='juliiosp'
-export IMAGE_TAG='latest'
-```
-
-Renderiza los manifiestos sustituyendo las imágenes locales definidas por Kustomize:
-
-```bash
-kubectl kustomize k8s \
-  | sed \
-      -e "s#odrl-translator-api:local#ghcr.io/${GH_USER}/tfm-traductor-bidireccional-odrl-api:${IMAGE_TAG}#g" \
-      -e "s#odrl-translator-ui:local#ghcr.io/${GH_USER}/tfm-traductor-bidireccional-odrl-ui:${IMAGE_TAG}#g" \
-  | kubectl apply -f -
-```
-
-Comprueba los rollouts:
-
-```bash
-kubectl rollout status statefulset/odrl-postgres -n odrl --timeout=300s
-kubectl rollout status deployment/odrl-api -n odrl --timeout=300s
-kubectl rollout status deployment/odrl-ui -n odrl --timeout=300s
-```
-
-Verifica el resultado:
-
-```bash
-kubectl get pods,services,ingress,hpa,pvc -n odrl
-```
-
-## GHCR privado
-
-Crea un token de GitHub con permiso de lectura de paquetes y ejecuta:
-
-```bash
-kubectl -n odrl create secret docker-registry ghcr-credentials \
-  --docker-server=ghcr.io \
-  --docker-username='tu_usuario' \
-  --docker-password='tu_token' \
-  --docker-email='tu_correo'
-
-kubectl -n odrl patch serviceaccount default \
-  -p '{"imagePullSecrets":[{"name":"ghcr-credentials"}]}'
-```
-
-No guardes el token en Git ni en archivos versionados.
-
-## Acceso externo
-
-El manifiesto incluido usa el host de demostración:
-
-```text
-odrl.local
-```
-
-En un clúster externo debes adaptar `k8s/70-ingress.yaml` con:
-
-- el dominio real;
-- el controlador Ingress disponible;
-- TLS y su certificado;
-- las políticas de seguridad requeridas.
-
-No expongas públicamente el prototipo sin autenticación, control de acceso, límites de consumo, protección de secretos y una política de retención de datos.
-
----
-
-# 4. GitHub Actions y GHCR
+# 3. GitHub Actions y GHCR
 
 El workflow `.github/workflows/ci-cd.yml` se ejecuta en pull requests, pushes a `main` y ejecuciones manuales.
 
@@ -408,7 +298,7 @@ Para un entorno estable, utiliza la etiqueta `sha-<commit>` que corresponda a la
 
 ---
 
-# 5. Diagnóstico rápido
+# 4. Diagnóstico rápido
 
 ## `ImagePullBackOff` o `ErrImagePull`
 
@@ -494,7 +384,7 @@ El clúster necesita una `StorageClass` predeterminada o una clase configurada e
 
 ---
 
-# 6. Alcance operativo
+# 5. Alcance operativo
 
 Los recursos incluidos permiten demostrar:
 
